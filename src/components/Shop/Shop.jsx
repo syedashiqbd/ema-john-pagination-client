@@ -12,13 +12,20 @@ import { Link, useLoaderData } from 'react-router-dom';
 const Shop = () => {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
+  const [productPerPage, SetProductPerPage] = useState(9);
+  const [currentPage, setCurrentPage] = useState(0);
   const { totalProduct } = useLoaderData();
+  const numberOfPage = Math.ceil(totalProduct / productPerPage);
+
+  const pages = [...Array(numberOfPage).keys()];
 
   useEffect(() => {
-    fetch('http://localhost:5000/products')
+    fetch(
+      `http://localhost:5000/products?page=${currentPage}&size=${productPerPage}`
+    )
       .then((res) => res.json())
       .then((data) => setProducts(data));
-  }, []);
+  }, [currentPage, productPerPage]);
 
   useEffect(() => {
     const storedCart = getShoppingCart();
@@ -65,6 +72,18 @@ const Shop = () => {
     deleteShoppingCart();
   };
 
+  const handPrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handNextPage = () => {
+    if (currentPage < pages.length - 1) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   return (
     <div className="shop-container">
       <div className="products-container">
@@ -82,6 +101,36 @@ const Shop = () => {
             <button className="btn-proceed">Review Order</button>
           </Link>
         </Cart>
+      </div>
+      <div className="pagination">
+        <p>Current Page : {currentPage}</p>
+        <button onClick={handPrevPage}>Prev</button>
+        {pages.map((page) => (
+          <button
+            className={currentPage === page ? 'selected' : undefined}
+            onClick={() => setCurrentPage(page)}
+            key={page}
+          >
+            {page}
+          </button>
+        ))}
+        <button onClick={handNextPage}>Next</button>
+        <select
+          className="select"
+          value={productPerPage}
+          onChange={(e) => {
+            SetProductPerPage(Number(e.target.value));
+            setCurrentPage(0);
+          }}
+          id=""
+        >
+          <option value="6">6</option>
+          <option value="9">9</option>
+          <option value="12">12</option>
+          <option value="24">24</option>
+          <option value="48">48</option>
+          <option value={totalProduct}>Show All</option>
+        </select>
       </div>
     </div>
   );
